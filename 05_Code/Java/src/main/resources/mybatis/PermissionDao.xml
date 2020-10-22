@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sanctuary.eduinfosvc.dao.admin.PermissionDao">
+
+    <resultMap id="Users" type="User">
+        <result property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+        <result property="sex" column="user_sex"/>
+        <result property="phone" column="user_phone"/>
+        <result property="role" column="user_role"/>
+        <result property="status" column="user_status"/>
+        <result property="note" column="user_note"/>
+        <result property="organizeId" column="organize_id"/>
+        <result property="organizeName" column="organize_name"/>
+    </resultMap>
+
+    <resultMap id="Columns" type="Column">
+        <result property="id" column="id"/>
+        <result property="name" column="column_name"/>
+        <result property="uploadPower" column="upload_power"/>
+        <result property="checkPower" column="check_power"/>
+    </resultMap>
+
+    <!-- 用户：查询总量 -->
+    <select id="queryUsersNum" resultType="Integer">
+        select count(1) from user where (organize_id = #{value}
+        or organize_id in (select id from organize where parent_id = #{value})
+        or organize_id in (select id from organize where parent_id in (select id from organize where parent_id = #{value})))
+        and user_role = 2;
+    </select>
+
+    <!-- 用户：查询指定页数用户 -->
+    <select id="queryUsers" resultMap="Users">
+        select user.id, user_name, user_sex, user_phone, user_role, user_status, user_note, organize_id, organize_name
+        from user, organize where (organize_id = #{organizeId}
+        or organize_id in (select id from organize where parent_id = #{organizeId})
+        or organize_id in (select id from organize where parent_id in (select id from organize where parent_id = #{organizeId})))
+        and user.organize_id = organize.id and user_role = 2 limit #{page.begin}, #{page.pageSize};
+    </select>
+
+    <!-- 栏目权限：查询指定ID用户的栏目权限 -->
+    <select id="queryColumns" parameterType="Integer" resultMap="Columns">
+        select educolumn.id, column_name, upload_power, check_power
+        from user_permission, educolumn where user_id = #{value} and column_id = educolumn.id;
+    </select>
+
+    <!-- 栏目权限：修改指定ID用户的栏目权限 -->
+    <update id="alterColumns">
+        update user_permission set upload_power = #{uploadPower}, check_power = #{checkPower}
+        where user_id = #{userId} and column_id = #{columnId};
+    </update>
+
+</mapper>
