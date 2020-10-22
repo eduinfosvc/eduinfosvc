@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sanctuary.eduinfosvc.dao.TestDao">
+
+    <resultMap id="Users" type="User">
+        <result property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+        <result property="sex" column="user_sex"/>
+        <result property="password" column="user_pass"/>
+        <result property="role" column="user_role"/>
+        <result property="organizeId" column="organize_id"/>
+    </resultMap>
+
+    <select id="findUser" parameterType="User" resultMap="Users">
+        select id, user_name, user_sex, user_pass, user_role, organize_id from user
+        where user_phone =  #{phone} and user_pass = #{password};
+    </select>
+
+</mapper>

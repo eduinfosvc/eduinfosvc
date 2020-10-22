@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sanctuary.eduinfosvc.dao.sysadmin.OrganizeDao">
+
+    <resultMap id="Organizes" type="Organize">
+        <result property="organizeId" column="id"/>
+        <result property="organizeName" column="organize_name"/>
+        <result property="organizeNote" column="organize_note"/>
+    </resultMap>
+
+    <resultMap id="Users" type="User">
+        <result property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+    </resultMap>
+
+    <!-- 组织：查询总量 (查询全部父组) -->
+    <select id="queryOrganizesNum" parameterType="String" resultType="Integer">
+        <if test="name == null or name == ''">
+            select count(1) from organize where parent_id is null;
+        </if>
+        <if test="name != null and name != ''">
+            select count(1) from organize where organize_name like concat('%', #{name}, '%');
+        </if>
+    </select>
+
+    <!-- 组织：查询指定页数父组-基本信息 -->
+    <select id="queryOrganizes" resultMap="Organizes">
+        select id, organize_name, organize_note from organize
+        where parent_id is null limit #{page.begin}, #{page.pageSize};
+    </select>
+
+    <!-- 组织：查询指定页数和名称父组-基本信息 -->
+    <select id="queryOrganizesByName" resultMap="Organizes">
+        select id, organize_name, organize_note from organize
+        where parent_id is null and organize_name like concat('%', #{name}, '%')
+        limit #{page.begin}, #{page.pageSize};
+    </select>
+
+    <!-- 组织：查询指定父亲-儿子信息 -->
+    <select id="getOrganizeChildren" parameterType="Integer" resultMap="Organizes">
+        select id, organize_name, organize_note from organize where parent_id =#{value};
+    </select>
+
+    <!-- 组织：增加组织 -->
+    <insert id="addOrganize" parameterType="Organize">
+        <if test="parentId != 0">
+            insert into organize(organize_name, organize_note, parent_id)
+            values(#{organizeName}, #{organizeNote}, #{parentId});
+        </if>
+        <if test="parentId == 0">
+            insert into organize(organize_name, organize_note) values(#{organizeName}, #{organizeNote});
+        </if>
+    </insert>
+
+    <!-- 组织：修改组织 -->
+    <update id="alterOrganize" parameterType="Organize" >
+        update organize set organize_name = #{organizeName}, organize_note = #{organizeNote} where id = #{organizeId};
+    </update>
+
+    <!-- 组织：删除组织 -->
+    <delete id="deleteOrganize" parameterType="Integer" >
+        delete from organize where id = #{value};
+    </delete>
+
+    <!-- 组织：查询指定ID组织 -->
+    <select id="queryOrganizeById" parameterType="Integer" resultMap="Organizes">
+        select id, organize_name, organize_note from organize where id = #{value};
+    </select>
+
+    <!-- 用户：查询指定ID组织的所有用户 -->
+    <select id="getUsers" parameterType="Integer" resultMap="Users">
+        select id, user_name from user where organize_id = #{value};
+    </select>
+</mapper>
