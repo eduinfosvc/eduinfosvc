@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sanctuary.eduinfosvc.dao.sysadmin.UserDao">
+
+    <resultMap id="Users" type="User">
+        <result property="id" column="id"/>
+        <result property="userName" column="user_name"/>
+        <result property="sex" column="user_sex"/>
+        <result property="phone" column="user_phone"/>
+        <result property="role" column="user_role"/>
+        <result property="status" column="user_status"/>
+        <result property="note" column="user_note"/>
+        <result property="organizeId" column="organize_id"/>
+        <result property="organizeName" column="organize_name"/>
+    </resultMap>
+
+    <resultMap id="Organizes" type="Organize">
+        <result property="organizeId" column="id"/>
+        <result property="organizeName" column="organize_name"/>
+        <result property="organizeNote" column="organize_note"/>
+    </resultMap>
+
+    <!-- 用户：查询总量 -->
+    <select id="queryUsersNum" resultType="Integer">
+        <if test="name == null or name == ''">
+            select count(1) from user;
+        </if>
+        <if test="name != null and name != ''">
+            select count(1) from user where user_name like concat('%', #{name}, '%');
+        </if>
+    </select>
+
+    <!-- 用户：查询指定页数用户 -->
+    <select id="queryUsers" resultMap="Users">
+        select user.id, user_name, user_sex, user_phone, user_role, user_status, user_note, organize_id, organize_name
+        from user, organize where user.organize_id = organize.id
+        limit #{page.begin}, #{page.pageSize};
+    </select>
+
+    <!-- 用户：查询指定页数和名称用户 -->
+    <select id="queryUsersByName" resultMap="Users">
+        select user.id, user_name, user_sex, user_phone, user_role, user_status, user_note, organize_id, organize_name
+        from user, organize where user_name like concat('%', #{name}, '%') and user.organize_id = organize.id
+        limit #{page.begin}, #{page.pageSize};
+    </select>
+
+    <!-- 用户：查询指定ID用户 -->
+    <select id="queryUserById" parameterType="Integer" resultMap="Users">
+        select user.id, user_name, user_sex, user_phone, user_role, user_status, user_note, organize_id, organize_name
+        from user, organize where user.organize_id = organize.id and user.id =#{value};
+    </select>
+
+    <!-- 用户：增加用户 -->
+    <insert id="addUser" parameterType="User" useGeneratedKeys="true" keyProperty="id">
+        insert into user(user_name, user_sex, user_phone, user_pass, user_role, user_status, user_note, organize_id)
+        values(#{userName}, #{sex}, #{phone}, #{password}, #{role}, #{status}, #{note}, #{organizeId});
+    </insert>
+
+    <!-- 栏目权限：增加用户初始栏目权限 -->
+    <insert id="addPermissions">
+        insert into user_permission(user_id, column_id, upload_power, check_power)
+        values(#{userId}, #{columnId}, false, false);
+    </insert>
+
+    <!-- 用户：修改用户 -->
+    <update id="alterUser" parameterType="User" >
+        update user set user_status = #{status}, user_note = #{note},
+        user_phone = #{phone}, user_role = #{role} where id = #{id};
+    </update>
+
+    <!-- 组织：查询父组-基本信息 -->
+    <select id="queryOrganizes" resultMap="Organizes">
+        select id, organize_name, organize_note from organize where parent_id is null;
+    </select>
+
+    <!-- 组织：查询指定父亲-儿子信息 -->
+    <select id="getOrganizeChildren" parameterType="Integer" resultMap="Organizes">
+        select id, organize_name, organize_note from organize where parent_id =#{value};
+    </select>
+
+</mapper>
